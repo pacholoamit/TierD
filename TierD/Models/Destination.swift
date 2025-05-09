@@ -8,7 +8,6 @@
 import Foundation
 import SwiftData
 
-
 enum CloudStorageType: String, Codable, CaseIterable {
     case awsS3 = "s3"
     case azureBlob = "azureblob"
@@ -40,7 +39,6 @@ enum StorageType: Codable {
     case cloud(CloudStorageType)
 }
 
-
 struct CloudStorageTypeS3Configuration: Codable {
     var accessKeyId: String
     var secretAccessKey: String
@@ -69,10 +67,16 @@ enum Credentials: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         switch try container.decode(Kind.self, forKey: .type) {
         case .s3:
-            let cfg = try container.decode(CloudStorageTypeS3Configuration.self, forKey: .config)
+            let cfg = try container.decode(
+                CloudStorageTypeS3Configuration.self,
+                forKey: .config
+            )
             self = .s3(cfg)
         case .sftp:
-            let cfg = try container.decode(RemoteStorageTypeSFTPConfiguration.self, forKey: .config)
+            let cfg = try container.decode(
+                RemoteStorageTypeSFTPConfiguration.self,
+                forKey: .config
+            )
             self = .sftp(cfg)
         }
     }
@@ -82,14 +86,13 @@ enum Credentials: Codable {
         switch self {
         case .s3(let cfg):
             try container.encode(Kind.s3, forKey: .type)
-            try container.encode(cfg,   forKey: .config)
+            try container.encode(cfg, forKey: .config)
         case .sftp(let cfg):
             try container.encode(Kind.sftp, forKey: .type)
-            try container.encode(cfg,       forKey: .config)
+            try container.encode(cfg, forKey: .config)
         }
     }
 }
-
 
 /// Represents a specific storage endpoint within a tier.
 @Model
@@ -97,6 +100,9 @@ final class Destination {
     /// Unique identifier for the destination.
     @Attribute(.unique)
     var id: UUID = UUID()
+    
+    /// Represents the reference to the disk via url, if any
+    var url: String
 
     /// User-visible name for this destination configuration.
     var name: String
@@ -104,24 +110,23 @@ final class Destination {
     /// The storage type indicating local, remote server, or cloud.
     var type: StorageType
 
-    /// URL endpoint for the storage (file path, FTP URL, or cloud bucket URL).
-    var url: URL?
 
     /// Optional credentials or token string required for authentication.
-    var credentials: Credentials
+    var credentials: Credentials?
     /// Inverse relationship back to the owning tier; nullify on delete.
     @Relationship(deleteRule: .nullify, inverse: \Tier.destinations)
-    var tier: Tier
-
+    var tier: Tier?
 
     /// Initializes a new Destination attached to a given tier.
-    init(name: String,
-         type: StorageType,
-         credentials: Credentials,
-         tier: Tier) {
+    init(
+        name: String,
+        url: String,
+        type: StorageType,
+        credentials: Credentials? = nil,
+    ) {
         self.name = name
+        self.url = url
         self.type = type
         self.credentials = credentials
-        self.tier = tier
     }
 }
