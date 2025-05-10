@@ -124,6 +124,10 @@ public final class Disk {
         return Disk.formatByteCount(usedCapacity)
     }
     
+    var percentageUsed: Double {
+        return Double(usedCapacity) / Double(totalCapacity)
+    }
+    
     var formattedPercentageUsed: String {
         let percentageUsed: Double = Double(usedCapacity) / Double(totalCapacity) * 100
         return String(format: "%.1f%%", percentageUsed)

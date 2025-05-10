@@ -16,7 +16,6 @@ struct ContentView: View {
 
     @State private var selectedDisk: Disk?
 
- 
     init(modelContext: ModelContext) {
         self.fileManagerService = FileManagerService(modelContext: modelContext)
     }
@@ -25,34 +24,27 @@ struct ContentView: View {
         NavigationSplitView {
             // Sidebar showing tiers and disks
             List(selection: $selectedDisk) {
-//                ForEach(fileManagerService.volumes) { disk in
-//                    Text(disk.name)
-//
-//                }
-                                ForEach(tiers) { tier in
-                                    Section(header: tierHeader(tier: tier)) {
-                                        ForEach(tier.disks) { disk in
-                                            DiskRow(
-                                                disk: disk,
-                                                colorScheme: colorScheme
-                                            )
-                                            .tag(disk)
-                                        }
-                                    }
-                                }
+                ForEach(tiers) { tier in
+                    Section(header: tierHeader(tier: tier)) {
+                        ForEach(tier.disks) { disk in
+                            DiskRow( disk: disk )
+                            .tag(disk)
+                        }
+                    }
+                }
             }
             .navigationTitle("Storage Tiers")
             .listStyle(SidebarListStyle())
-//            .toolbar {
-//                ToolbarItem(placement: .primaryAction) {
-//                    Button(action: {
-//                        // Future action for adding new disk
-//                    }) {
-//                        Label("Add disk", systemImage: "plus")
-//                    }
-//                    .tint(Color.accentColor)
-//                }
-//            }
+                        .toolbar {
+                            ToolbarItem(placement: .primaryAction) {
+                                Button(action: {
+                                    // Future action for adding new disk
+                                }) {
+                                    Label("Add disk", systemImage: "plus")
+                                }
+                                .tint(Color.accentColor)
+                            }
+                        }
         } detail: {
             // Detail view showing selected disk
             if let disk = selectedDisk {
@@ -75,18 +67,10 @@ struct ContentView: View {
     private func tierHeader(tier: Tier) -> some View {
         HStack {
             Text("Tier \(tier.level)")
-                .font(.headline)
-                .foregroundStyle(Color.accentColor.opacity(0.8))
+                .font(.subheadline)
+                .fontWeight(.bold)
 
-            Spacer()
-
-            if !tier.disks.isEmpty {
-                Text(
-                    "\(tier.disks.count) storage\(tier.disks.count == 1 ? "" : "s")"
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
+        
         }
     }
 }
