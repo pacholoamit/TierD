@@ -28,6 +28,8 @@ struct DiskDetailView: View {
             return colorScheme == .dark ? .purple : .purple
         case .cloud:
             return colorScheme == .dark ? .cyan : .cyan
+        case .unknown:
+            return .gray
         }
     }
     
@@ -107,6 +109,8 @@ struct DiskDetailView: View {
             case .dropbox:
                 return "cloud.fill"
             }
+        case .unknown:
+            return "questionmark"
         }
     }
     
@@ -114,6 +118,8 @@ struct DiskDetailView: View {
         switch disk.type {
         case .local:
             return "Local Storage"
+        case .unknown:
+            return "Unknown"
         case .external(let type):
             switch type {
             case .usb:

@@ -28,7 +28,7 @@ enum ExternalStorageType: String, Codable, CaseIterable {
 }
 
 /// Enumeration of supported storage Disk types.
-enum StorageType: Codable {
+enum StorageType: Codable, Hashable {
     /// Local macOS drive (Tier 1 storage).
     case local
     /// External SD / HD
@@ -37,6 +37,8 @@ enum StorageType: Codable {
     case remote(RemoteStorageType)
     /// Cloud-based storage such as AWS S3 or Azure Blob (Tier 3+ storage).
     case cloud(CloudStorageType)
+
+    case unknown
 }
 
 struct CloudStorageTypeS3Configuration: Codable {
@@ -96,20 +98,49 @@ enum Credentials: Codable {
 
 /// Represents a specific storage endpoint within a tier.
 @Model
-final class Disk {
+public final class Disk {
     /// Unique identifier for the Disk.
     @Attribute(.unique)
-    var id: UUID = UUID()
-    
-    /// Represents the reference to the disk via url, if any
-    var url: String
+   public var id: UUID = UUID()
 
     /// User-visible name for this Disk configuration.
     var name: String
 
+    /// Represents the reference to the disk via url, if any
+    @Attribute(.unique)
+    var url: String
+
+    var availableCapacity: Int
+    
+    var formattedAvailableCapacity: String {
+        return Disk.formatByteCount(availableCapacity)
+    }
+    
+    var formattedTotalCapacity: String {
+        return Disk.formatByteCount(totalCapacity)
+    }
+    
+    var formattedUsedCapacity: String {
+        return Disk.formatByteCount(usedCapacity)
+    }
+    
+    var formattedPercentageUsed: String {
+        let percentageUsed: Double = Double(usedCapacity) / Double(totalCapacity) * 100
+        return String(format: "%.1f%%", percentageUsed)
+    }
+
+    var totalCapacity: Int
+
+    var usedCapacity: Int
+
+    var isEjectable: Bool
+
+    var isLocal: Bool
+
+    var isRemovable: Bool
+
     /// The storage type indicating local, remote server, or cloud.
     var type: StorageType
-
 
     /// Optional credentials or token string required for authentication.
     var credentials: Credentials?
@@ -117,16 +148,40 @@ final class Disk {
     @Relationship(deleteRule: .nullify, inverse: \Tier.disks)
     var tier: Tier?
 
-    /// Initializes a new Disk attached to a given tier.
+    // Helper function to format byte count
+    private static func formatByteCount(_ byteCount: Int) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useAll]
+        formatter.countStyle = .file
+        formatter.includesUnit = true
+        formatter.isAdaptive = true
+        
+        return formatter.string(fromByteCount: Int64(byteCount))
+    }
+    
     init(
-        name: String,
-        url: String,
-        type: StorageType,
+        name: String?,
+        url: String?,
+        availableCapacity: Int?,
+        totalCapacity: Int?,
+        usedCapacity: Int?,
+        isEjectable: Bool?,
+        isLocal: Bool?,
+        isRemovable: Bool?,
+        type: StorageType?,
         credentials: Credentials? = nil,
     ) {
-        self.name = name
-        self.url = url
-        self.type = type
-        self.credentials = credentials
+        self.name = name ?? "Unknown"
+        self.url = url ?? "Unknown"
+        self.availableCapacity = availableCapacity ?? 0
+        self.totalCapacity = totalCapacity ?? 0
+        self.usedCapacity = usedCapacity ?? 0
+        self.isEjectable = isEjectable ?? false
+        self.isLocal = isLocal ?? false
+        self.isRemovable = isRemovable ?? false
+        self.type = type ?? .unknown
+        self.credentials = credentials ?? nil
     }
+
+ 
 }

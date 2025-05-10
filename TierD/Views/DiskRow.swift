@@ -48,6 +48,8 @@ struct DiskRow: View {
         switch disk.type {
         case .local:
             return "internaldrive"
+        case .unknown:
+            return "questionmark"
         case .external(let type):
             switch type {
             case .usb:
@@ -74,6 +76,8 @@ struct DiskRow: View {
             return colorScheme == .dark ? .purple : .purple
         case .cloud:
             return colorScheme == .dark ? .cyan : .cyan
+        case .unknown:
+            return .gray
         }
     }
     

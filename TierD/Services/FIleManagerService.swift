@@ -10,58 +10,22 @@ import Observation
 
 enum FileManagerServiceError: String, Error, Hashable {
     case FailedToScanVolumes = "Failed to scan volumes"
-    case FailedToGetVolumeResourceKeyValue = "Failed to get volume resource key value"
+    case FailedToGetVolumeResourceKeyValue =
+        "Failed to get volume resource key value"
 }
-
-
-@Observable public final class FileManagerServiceVolume: Codable, Identifiable  {
-    public var id = UUID()
-    var name: String
-    var path: String
-    var availableCapacity: Int
-    var totalCapacity: Int
-    var typeName: String
-    var subtype: Int
-    var isEjectable: Bool
-    var isLocal: Bool
-    var isRemovable: Bool
-    
-    init(
-        name: String?,
-        path: String?,
-        availableCapacity: Int?,
-        totalCapacity: Int?,
-        typeName: String?,
-        subtype: Int?,
-        isEjectable: Bool?,
-        isLocal: Bool?,
-        isRemovable: Bool?
-    ) {
-        self.name = name ?? "Unknown"
-        self.path = path ?? "Unknown"
-        self.availableCapacity = availableCapacity ?? 0
-        self.totalCapacity = totalCapacity ?? 0
-        self.typeName = typeName ?? "Unknown"
-        self.subtype = subtype ?? 0
-        self.isEjectable = isEjectable ?? false
-        self.isLocal = isLocal ?? false
-        self.isRemovable = isRemovable ?? false
-    }
-}
-
 
 @Observable public final class FileManagerService {
 
-    public var volumes: [FileManagerServiceVolume] = []
+    public var volumes: [Disk] = []
 
     private static var fileManager: FileManager = FileManager.default
 
-    init()  {
+    init() {
         self.volumes = try! FileManagerService.scanVolumes()
     }
 
-    static private func scanVolumes() throws -> [FileManagerServiceVolume] {
-        var volumes: [FileManagerServiceVolume] = []
+    static private func scanVolumes() throws -> [Disk] {
+        var volumes: [Disk] = []
         let keys: Set<URLResourceKey> = [
             .volumeNameKey,
             .volumeAvailableCapacityKey,
@@ -70,32 +34,57 @@ enum FileManagerServiceError: String, Error, Hashable {
             .volumeSubtypeKey,
             .volumeIsEjectableKey,
             .volumeIsLocalKey,
-            .volumeIsRemovableKey
+            .volumeIsRemovableKey,
         ]
-        
-        guard let urls = fileManager.mountedVolumeURLs(
-            includingResourceValuesForKeys: Array(keys),
-            options: [.skipHiddenVolumes]
-        ) else {
+
+        guard
+            let urls = fileManager.mountedVolumeURLs(
+                includingResourceValuesForKeys: Array(keys),
+                options: [.skipHiddenVolumes]
+            )
+        else {
             throw FileManagerServiceError.FailedToScanVolumes
         }
-        
 
         for url in urls {
             do {
                 let rv = try url.resourceValues(forKeys: keys)
-                volumes.append(.init(
-                    name:               rv.volumeName,
-                    path:               url.path,
-                    availableCapacity:  rv.volumeAvailableCapacity,
-                    totalCapacity:      rv.volumeTotalCapacity,
-                    typeName:           rv.volumeTypeName,
-                    subtype:            rv.volumeSubtype,
-                    isEjectable:        rv.volumeIsEjectable,
-                    isLocal:            rv.volumeIsLocal,
-                    isRemovable:        rv.volumeIsRemovable
-                ))
-                print("✅ Scanned volume \(rv.volumeName ?? "Unknown") at \(url.path)")
+
+                let usedCapactiy =
+                    rv.volumeAvailableCapacity?
+                    .subtractingReportingOverflow(
+                        rv.volumeTotalCapacity ?? 0
+                    ).partialValue ?? 0
+                
+                let newDisk =     Disk(
+                    name: rv.volumeName,
+                    url: rv.path,
+                    availableCapacity: rv.volumeAvailableCapacity,
+                    totalCapacity: rv.volumeTotalCapacity,
+                    usedCapacity: usedCapactiy,
+                    isEjectable: rv.volumeIsEjectable,
+                    isLocal: rv.volumeIsLocal,
+                    isRemovable: rv.volumeIsRemovable,
+                    type: .local
+                )
+
+                volumes.append(
+                    newDisk
+                )
+                
+     
+                // Print detailed disk information
+                print("""
+                ✅ Added Disk:
+                   Name: \(rv.volumeName ?? "Unknown")
+                   Path: \(url.path)
+                   Storage: \(newDisk.formattedUsedCapacity) used of \(newDisk.formattedTotalCapacity) (\(newDisk.formattedPercentageUsed)%)
+                   Available: \(newDisk.formattedAvailableCapacity)
+                   Type: \(rv.volumeTypeName ?? "Unknown")
+                   IsLocal: \(String(describing: rv.volumeIsLocal))
+                   IsRemovable: \(String(describing: rv.volumeIsRemovable))
+                   IsEjectable: \(String(describing: rv.volumeIsEjectable))
+                """)
             } catch {
                 // Log and continue on error
                 print("⚠️ Skipping volume at \(url.path): \(error)")
@@ -103,4 +92,6 @@ enum FileManagerServiceError: String, Error, Hashable {
         }
         return volumes
     }
+    
+ 
 }
