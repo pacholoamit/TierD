@@ -12,32 +12,34 @@ struct ContentView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.colorScheme) private var colorScheme
     @Query(Tier.all) private var tiers: [Tier]
-    var fileManagerService = FileManagerService()
-    let volumes = FileManagerService().volumes
-    
+    @State private var fileManagerService = FileManagerService()
+
     @State private var selectedDisk: Disk?
-    
+
     // System-adaptive accent colors
     private var accentColor: Color {
         return Color.accentColor
     }
-    
-    
+
     var body: some View {
         NavigationSplitView {
             // Sidebar showing tiers and disks
             List(selection: $selectedDisk) {
-                ForEach(tiers) { tier in
-                    Section(header: tierHeader(tier: tier)) {
-                        ForEach(volumes) { disk in
-                            DiskRow(
-                                disk: disk,
-                                colorScheme: colorScheme
-                            )
-                            .tag(disk)
-                        }
-                    }
+                ForEach(fileManagerService.volumes) { disk in
+                    Text(disk.name)
+
                 }
+                //                ForEach(tiers) { tier in
+                //                    Section(header: tierHeader(tier: tier)) {
+                //                        ForEach(fileM) { disk in
+                //                            DiskRow(
+                //                                disk: disk,
+                //                                colorScheme: colorScheme
+                //                            )
+                //                            .tag(disk)
+                //                        }
+                //                    }
+                //                }
             }
             .navigationTitle("Storage Tiers")
             .listStyle(SidebarListStyle())
@@ -67,26 +69,27 @@ struct ContentView: View {
                 }
             }
         }
-        .tint(accentColor) // Apply accent color to navigation elements
+        .tint(accentColor)  // Apply accent color to navigation elements
     }
-    
+
     private func tierHeader(tier: Tier) -> some View {
         HStack {
             Text("Tier \(tier.level)")
                 .font(.headline)
                 .foregroundStyle(accentColor.opacity(0.8))
-            
+
             Spacer()
-            
+
             if !tier.disks.isEmpty {
-                Text("\(tier.disks.count) storage\(tier.disks.count == 1 ? "" : "s")")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "\(tier.disks.count) storage\(tier.disks.count == 1 ? "" : "s")"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
         }
     }
 }
-
 
 #Preview {
     ContentView()

@@ -13,8 +13,9 @@ enum FileManagerServiceError: String, Error, Hashable {
     case FailedToGetVolumeResourceKeyValue = "Failed to get volume resource key value"
 }
 
-@Observable
-class FileManagerServiceVolume {
+
+@Observable public final class FileManagerServiceVolume: Codable, Identifiable  {
+    public var id = UUID()
     var name: String
     var path: String
     var availableCapacity: Int
@@ -48,10 +49,10 @@ class FileManagerServiceVolume {
     }
 }
 
-@Observable
-class FileManagerService {
 
-    var volumes: [FileManagerServiceVolume] = []
+@Observable public final class FileManagerService {
+
+    public var volumes: [FileManagerServiceVolume] = []
 
     private static var fileManager: FileManager = FileManager.default
 
