@@ -1,5 +1,5 @@
 //
-//  Destination.swift
+//  Disk.swift
 //  TierD
 //
 //  Created by Pacholo Amit on 5/6/25.
@@ -27,7 +27,7 @@ enum ExternalStorageType: String, Codable, CaseIterable {
     case hdd = "hdd"
 }
 
-/// Enumeration of supported storage destination types.
+/// Enumeration of supported storage Disk types.
 enum StorageType: Codable {
     /// Local macOS drive (Tier 1 storage).
     case local
@@ -96,15 +96,15 @@ enum Credentials: Codable {
 
 /// Represents a specific storage endpoint within a tier.
 @Model
-final class Destination {
-    /// Unique identifier for the destination.
+final class Disk {
+    /// Unique identifier for the Disk.
     @Attribute(.unique)
     var id: UUID = UUID()
     
     /// Represents the reference to the disk via url, if any
     var url: String
 
-    /// User-visible name for this destination configuration.
+    /// User-visible name for this Disk configuration.
     var name: String
 
     /// The storage type indicating local, remote server, or cloud.
@@ -114,10 +114,10 @@ final class Destination {
     /// Optional credentials or token string required for authentication.
     var credentials: Credentials?
     /// Inverse relationship back to the owning tier; nullify on delete.
-    @Relationship(deleteRule: .nullify, inverse: \Tier.destinations)
+    @Relationship(deleteRule: .nullify, inverse: \Tier.disks)
     var tier: Tier?
 
-    /// Initializes a new Destination attached to a given tier.
+    /// Initializes a new Disk attached to a given tier.
     init(
         name: String,
         url: String,

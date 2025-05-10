@@ -8,7 +8,7 @@
 import Foundation
 import SwiftData
 
-/// Represents an ordered storage tier which groups multiple storage destinations.
+/// Represents an ordered storage tier which groups multiple storage Disks.
 @Model
 final class Tier {
     /// Unique identifier for the tier.
@@ -22,16 +22,16 @@ final class Tier {
         FetchDescriptor(sortBy: [SortDescriptor(\Tier.level)])
     }
 
-    /// Destinations associated with this tier; deleting a tier cascades to its destinations.
+    /// Disks associated with this tier; deleting a tier cascades to its Disks.
     @Relationship(deleteRule: .cascade)
-    var destinations: [Destination] = []
+    var disks: [Disk] = []
     
-    func addDestination(_ destination: Destination) {
-        self.destinations.append(destination)
+    func addDisk(_ Disk: Disk) {
+        self.disks.append(Disk)
     }
     
-    func removeDestination(_ destination: Destination) {
-        self.destinations.removeAll { $0.id == destination.id }
+    func removeDisk(_ Disk: Disk) {
+        self.disks.removeAll { $0.id == Disk.id }
     }
     
     /// Initializes a new Tier with a given name and sort order.

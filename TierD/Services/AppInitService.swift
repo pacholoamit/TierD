@@ -44,9 +44,9 @@ class AppInitService {
         // Keep track of paths we've already processed to avoid duplicates
         var processedPaths = Set<String>()
         
-        // Check for existing destinations to avoid duplicates on app restart
-        let existingDestinations = try? context.fetch(FetchDescriptor<Destination>())
-        let existingPaths = Set(existingDestinations?.map { $0.url } ?? [])
+        // Check for existing Disks to avoid duplicates on app restart
+        let existingDisks = try? context.fetch(FetchDescriptor<Disk>())
+        let existingPaths = Set(existingDisks?.map { $0.url } ?? [])
         
         processedPaths.formUnion(existingPaths)
         
@@ -62,6 +62,7 @@ class AppInitService {
                 
                 let resourceValues = try volumeURL.resourceValues(forKeys: Set(keys))
                 
+             
                 let volumeName = resourceValues.volumeName ?? "Unknown"
                 let isLocal = resourceValues.volumeIsLocal ?? false
                 let isRemovable = resourceValues.volumeIsRemovable ?? false
@@ -135,14 +136,14 @@ class AppInitService {
                     }
                 }
                 
-                let destination = Destination(
+                let Disk = Disk(
                     name: volumeName,
                     url: path,
                     type: storageType
                 )
                 
-                // Add the destination to the base tier
-                baseTier.addDestination(destination)
+                // Add the Disk to the base tier
+                baseTier.addDisk(Disk)
                 
                 // Mark this path as processed
                 processedPaths.insert(path)
@@ -153,7 +154,7 @@ class AppInitService {
         }
     }
 
-    /// Initializes the base tier and default destinations
+    /// Initializes the base tier and default Disks
     static func initialize(in context: ModelContext) {
 
 
@@ -163,7 +164,7 @@ class AppInitService {
     /// Creates and configures a model container for the app
     @MainActor static func createModelContainer() -> ModelContainer {
         let schema = Schema([
-            Destination.self,
+            Disk.self,
             Tier.self,
         ])
 
@@ -177,8 +178,8 @@ class AppInitService {
                 for: schema,
                 configurations: [modelConfiguration]
             )
-
-            initialize(in: container.mainContext)
+            
+           let _ = try! FileManagerService.init()
 
             return container
         } catch {
