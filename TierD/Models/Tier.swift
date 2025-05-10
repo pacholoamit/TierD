@@ -26,6 +26,12 @@ final class Tier {
     @Relationship(deleteRule: .cascade)
     var disks: [Disk] = []
     
+    func addUniqueDisk(_ Disk: Disk) {
+        if !self.disks.contains(Disk) {
+            self.disks.append(Disk)
+        }
+    }
+
     func addDisk(_ Disk: Disk) {
         self.disks.append(Disk)
     }

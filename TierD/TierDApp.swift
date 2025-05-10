@@ -10,17 +10,18 @@ import SwiftUI
 
 @main
 struct TierDApp: App {
-    var sharedModelContainer: ModelContainer = {
-        return AppInitService.createModelContainer()
-    }()
+    let container: ModelContainer
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(modelContext: container.mainContext)
         }
-        .modelContainer(sharedModelContainer)
+        .modelContainer(container)
+    }
+
+    init() {
+
+        container = AppInitService.createModelContainer()
+
     }
 }
-
-
-
